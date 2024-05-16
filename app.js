@@ -10,49 +10,39 @@ const { CronJob } = require("cron");
 const winston = require("winston");
 const { format } = require("winston");
 const retry = require("async-retry");
-require('dotenv').config();
-const cors = require('cors');
+require("dotenv").config();
+const cors = require("cors");
 
-const logDir = 'log';
+const logDir = "log";
 
 // Create the log directory if it does not exist
-if (!fs.existsSync(logDir)){
+if (!fs.existsSync(logDir)) {
     fs.mkdirSync(logDir);
 }
 
 // Create a logger
 const logger = winston.createLogger({
-    level: 'info',
+    level: "info",
     format: format.combine(
-        format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+        format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
         format.printf(({ timestamp, level, message }) => `${timestamp} ${level}: ${message}`)
     ),
     transports: [
         new winston.transports.Console(),
         new winston.transports.File({
-            filename: `log/${new Date().toISOString().split('T')[0]}.log`,
-            datePattern: 'YYYY-MM-DD',
-            prepend: true
-        })
-    ]
+            filename: `log/${new Date().toISOString().split("T")[0]}.log`,
+            datePattern: "YYYY-MM-DD",
+            prepend: true,
+        }),
+    ],
 });
 
-// Database connection configuration
-const client = new Client({
+const clientConfig = {
     connectionString: process.env.DATABASE_URL,
-});
-
-async function connectToDatabase() {
-    try {
-        await client.connect();
-        logger.info("Connected to PostgreSQL database");
-    } catch (err) {
-        logger.error("Failed to connect to PostgreSQL database:", err.message);
-        process.exit(1); // Exit the process with a non-zero status code
+    ssl: {
+        rejectUnauthorized: false,
     }
-}
-
-connectToDatabase();
+};
 
 const url = process.env.DATA_URL;
 const filePath = "./data.zip";
@@ -76,7 +66,28 @@ class StationItem {
     }
 }
 
+async function connectToDatabase(client) {
+    try {
+        await client.connect();
+        logger.info("Connected to PostgreSQL database");
+    } catch (err) {
+        logger.error("Failed to connect to PostgreSQL database:", err);
+        process.exit(1); // Exit the process with a non-zero status code
+    }
+}
+
+async function closeDatabase(client) {
+    try {
+        await client.end();
+        logger.info("Disconnected from PostgreSQL database");
+    } catch (err) {
+        logger.error("Failed to disconnect from PostgreSQL database:", err);
+    }
+}
+
 async function insertItems(items) {
+    const client = new Client(clientConfig);
+    await connectToDatabase(client);
     try {
         await client.query(`
             CREATE TABLE IF NOT EXISTS hua_aqi_stations (
@@ -166,42 +177,47 @@ async function insertItems(items) {
         logger.info(`${duplicateCount} items were duplicates and not inserted.`);
     } catch (err) {
         logger.error("Error inserting items:", err.message);
+    } finally {
+        await closeDatabase(client);
     }
 }
 
 async function downloadFile() {
-    await retry(async () => {
-        return new Promise((resolve, reject) => {
-            const request = https.get(url, function (response) {
-                if (response.statusCode !== 200) {
-                    const error = new Error(`Failed to get '${url}' (${response.statusCode})`);
-                    logger.error(`Error downloading the file: ${error.message}`);
-                    reject(error);
-                    return;
-                }
+    await retry(
+        async () => {
+            return new Promise((resolve, reject) => {
+                const request = https.get(url, function (response) {
+                    if (response.statusCode !== 200) {
+                        const error = new Error(`Failed to get '${url}' (${response.statusCode})`);
+                        logger.error(`Error downloading the file: ${error.message}`);
+                        reject(error);
+                        return;
+                    }
 
-                const fileStream = fs.createWriteStream(filePath);
-                response.pipe(fileStream);
+                    const fileStream = fs.createWriteStream(filePath);
+                    response.pipe(fileStream);
 
-                fileStream.on("finish", function () {
-                    fileStream.close(resolve);
+                    fileStream.on("finish", function () {
+                        fileStream.close(resolve);
+                    });
+
+                    fileStream.on("error", function (err) {
+                        logger.error(`Error writing to file: ${err.message}`);
+                        fs.unlink(filePath, () => reject(err));
+                    });
                 });
 
-                fileStream.on("error", function (err) {
-                    logger.error(`Error writing to file: ${err.message}`);
+                request.on("error", function (err) {
+                    logger.error(`Error with HTTPS request: ${err.message}`);
                     fs.unlink(filePath, () => reject(err));
                 });
             });
-
-            request.on("error", function (err) {
-                logger.error(`Error with HTTPS request: ${err.message}`);
-                fs.unlink(filePath, () => reject(err));
-            });
-        });
-    }, {
-        retries: 5, // Retry 5 times
-        minTimeout: 1000, // Wait 1 second between retries
-    }).catch((err) => {
+        },
+        {
+            retries: 3, // Retry 3 times
+            minTimeout: 1000, // Wait 1 second between retries
+        }
+    ).catch((err) => {
         logger.error("Error downloading the file after retries:", err.message);
     });
 }
@@ -212,9 +228,11 @@ async function unzipAndReadFile() {
             .pipe(unzipper.Extract({ path: extractPath }))
             .on("close", resolve)
             .on("error", reject);
-    }).then(() => {
+    })
+    .then(() => {
         readAndProcessJson(jsonFileName);
-    }).catch((err) => {
+    })
+    .catch((err) => {
         logger.error("Error unzipping file:", err.message);
     });
 }
@@ -264,10 +282,12 @@ const schema = buildSchema(`
 const root = {
     stationItems: async (args, context) => {
         const { req } = context;
+        const client = new Client(clientConfig);
+        await connectToDatabase(client);
         try {
             const res = await client.query("SELECT * FROM hua_aqi_stations");
             logger.info(`Fetched ${res.rows.length} stationItems`);
-            logger.info(`Client IP: ${req.ip}, User-Agent: ${req.headers['user-agent']}`);
+            logger.info(`Client IP: ${req.ip}, User-Agent: ${req.headers["user-agent"]}`);
             const results = res.rows.map((row) => ({
                 StationCode: row.stationcode,
                 StationName: row.stationname,
@@ -286,6 +306,8 @@ const root = {
         } catch (err) {
             logger.error("Error fetching stationItems:", err.message);
             throw err;
+        } finally {
+            await closeDatabase(client);
         }
     },
 };
@@ -294,7 +316,7 @@ const app = express();
 app.use(cors());
 
 app.use((req, res, next) => {
-    req.ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    req.ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
     next();
 });
 
@@ -310,20 +332,14 @@ app.use(
 
 app.listen(4000, () => logger.info("Now browse to localhost:4000/graphql"));
 
-// const job = new CronJob(
-//     "0 0 0 * * *",
-//     function () {
-//         downloadFile();
-//     },
-//     null,
-//     true,
-//     "Pacific/Auckland"
-// );
-
 const job = new CronJob(
-    "*/15 * * * * *",
+    "*/30 * * * * *",
     function () {
-        downloadFile();
+        downloadFile().then(() => {
+            unzipAndReadFile();
+        }).catch((err) => {
+            logger.error("Error during download or unzip:", err.message);
+        });
     },
     null,
     true,

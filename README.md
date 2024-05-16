@@ -35,8 +35,8 @@ To set up the project, follow these steps:
 3. **Set up the environment variables**:
     Create a `.env` file in the root of the project and add the following variables: 
     ```env
-    DATABASE_URL=your_postgresql_database_url
-    DATA_URL=your_data_url (optional, default is provided in the code)
+    DATABASE_URL=postgresql://username:password@database-address:port/default-database-name
+    DATA_URL=https://data.ecan.govt.nz:443/data/180/Air/Air%20quality%20all%20stations%20and%20monitor%20channels/CSV?zip=1
     ```
 
 ## 4. Usage

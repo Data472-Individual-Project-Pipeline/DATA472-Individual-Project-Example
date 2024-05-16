@@ -1,4 +1,4 @@
-# Individual Example
+# Individual Project Example
 
 ## 1. Introduction
 

@@ -307,8 +307,18 @@ app.use(
 
 app.listen(4000, () => logger.info("Now browse to localhost:4000/graphql"));
 
+// const job = new CronJob(
+//     "0 0 0 * * *",
+//     function () {
+//         downloadFile();
+//     },
+//     null,
+//     true,
+//     "Pacific/Auckland"
+// );
+
 const job = new CronJob(
-    "0 0 0 * * *",
+    "*/15 * * * * *",
     function () {
         downloadFile();
     },

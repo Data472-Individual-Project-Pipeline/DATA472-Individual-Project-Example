@@ -138,6 +138,6 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 
 ## 11. Contact
 
-For questions or support, please open an issue on GitHub or contact the project maintainers.
+For questions or support, please open an issue on GitHub or contact the Central Collection Team.
 
 Feel free to modify and extend this README file as needed to fit the specifics of your project.

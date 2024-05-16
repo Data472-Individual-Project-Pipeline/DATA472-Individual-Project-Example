@@ -175,7 +175,9 @@ async function downloadFile() {
         return new Promise((resolve, reject) => {
             const request = https.get(url, function (response) {
                 if (response.statusCode !== 200) {
-                    reject(new Error(`Failed to get '${url}' (${response.statusCode})`));
+                    const error = new Error(`Failed to get '${url}' (${response.statusCode})`);
+                    logger.error(`Error downloading the file: ${error.message}`);
+                    reject(error);
                     return;
                 }
 
@@ -187,11 +189,13 @@ async function downloadFile() {
                 });
 
                 fileStream.on("error", function (err) {
+                    logger.error(`Error writing to file: ${err.message}`);
                     fs.unlink(filePath, () => reject(err));
                 });
             });
 
             request.on("error", function (err) {
+                logger.error(`Error with HTTPS request: ${err.message}`);
                 fs.unlink(filePath, () => reject(err));
             });
         });
@@ -199,7 +203,7 @@ async function downloadFile() {
         retries: 5, // Retry 5 times
         minTimeout: 1000, // Wait 1 second between retries
     }).catch((err) => {
-        logger.error("Error downloading the file:", err.message);
+        logger.error("Error downloading the file after retries:", err.message);
     });
 }
 

@@ -39,7 +39,7 @@ const logger = winston.createLogger({
 
 // Database connection configuration
 const client = new Client({
-    connectionString: process.env.DATABASE_URL || "postgresql://root:password@localhost:5433/p_database",
+    connectionString: process.env.DATABASE_URL,
 });
 
 async function connectToDatabase() {
@@ -54,8 +54,7 @@ async function connectToDatabase() {
 
 connectToDatabase();
 
-const url = process.env.DATA_URL || 
-    "https://data.ecan.govt.nz/data/180/Air/Air%20quality%20all%20stations%20and%20monitor%20channels/JSON?zip=1";
+const url = process.env.DATA_URL;
 const filePath = "./data.zip";
 const extractPath = "./";
 const jsonFileName = "data.json";

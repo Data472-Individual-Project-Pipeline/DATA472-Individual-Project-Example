@@ -21,6 +21,11 @@ The project consists of the following main components:
 
 ## 3. Installation
 
+### Pre-requisites
+
+1. **Node.js**: The project is built using Node.js and npm. You can download Node.js from [here](https://nodejs.org/).
+2. **PostgreSQL**: The project uses PostgreSQL as the database. You can download PostgreSQL from [here](https://www.postgresql.org/).
+
 To set up the project, follow these steps:
 
 1. **Clone the repository**:

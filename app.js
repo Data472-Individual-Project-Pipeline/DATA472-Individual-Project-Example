@@ -11,6 +11,7 @@ const winston = require("winston");
 const { format } = require("winston");
 const retry = require("async-retry");
 require('dotenv').config();
+const cors = require('cors');
 
 const logDir = 'log';
 
@@ -287,6 +288,7 @@ const root = {
 };
 
 const app = express();
+app.use(cors());
 
 app.use((req, res, next) => {
     req.ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;

@@ -2,7 +2,9 @@
 
 ## 1. Introduction
 
-This is a pre-research project that the Central Collection Team made it to guide individual students to get start their project in Data472. It is based on the data from the website of [ECAN](https://data.ecan.govt.nz).
+This is a pre-research project that the Central Collection Team made it to guide individual students to get start their project in Data472.
+
+It is based on the data from the website of [ECAN](https://data.ecan.govt.nz)
 
 [online demo](http://3.25.85.38:4000/graphql?query=%23%20Welcome%20to%20GraphiQL%0A%23%0A%23%20GraphiQL%20is%20an%20in-browser%20tool%20for%20writing%2C%20validating%2C%20and%0A%23%20testing%20GraphQL%20queries.%0A%23%0A%23%20Type%20queries%20into%20this%20side%20of%20the%20screen%2C%20and%20you%20will%20see%20intelligent%0A%23%20typeaheads%20aware%20of%20the%20current%20GraphQL%20type%20schema%20and%20live%20syntax%20and%0A%23%20validation%20errors%20highlighted%20within%20the%20text.%0A%23%0A%23%20GraphQL%20queries%20typically%20start%20with%20a%20%22%7B%22%20character.%20Lines%20that%20start%0A%23%20with%20a%20%23%20are%20ignored.%0A%23%0A%23%20An%20example%20GraphQL%20query%20might%20look%20like%3A%0A%23%0A%23%20%20%20%20%20%7B%0A%23%20%20%20%20%20%20%20field(arg%3A%20%22value%22)%20%7B%0A%23%20%20%20%20%20%20%20%20%20subField%0A%23%20%20%20%20%20%20%20%7D%0A%23%20%20%20%20%20%7D%0A%23%0A%23%20Keyboard%20shortcuts%3A%0A%23%0A%23%20%20Prettify%20Query%3A%20%20Shift-Ctrl-P%20(or%20press%20the%20prettify%20button%20above)%0A%23%0A%23%20%20%20%20%20Merge%20Query%3A%20%20Shift-Ctrl-M%20(or%20press%20the%20merge%20button%20above)%0A%23%0A%23%20%20%20%20%20%20%20Run%20Query%3A%20%20Ctrl-Enter%20(or%20press%20the%20play%20button%20above)%0A%23%0A%23%20%20%20Auto%20Complete%3A%20%20Ctrl-Space%20(or%20just%20start%20typing)%0A%23%0A%0A%7B%0A%20%20stationItems%20%7B%0A%20%20%20%20StationCode%0A%20%20%20%20StationName%0A%20%20%20%20StationShortName%0A%20%20%20%20StationLocation%0A%20%20%20%20StationCity%0A%20%20%20%20StationLatitude%0A%20%20%20%20StationLongitude%0A%20%20%20%20MonitorChannel%0A%20%20%20%20MonitorName%0A%20%20%20%20MonitorTypeCode%0A%20%20%20%20MonitorTypeDescription%0A%20%20%20%20MonitorFullName%0A%20%20%7D%0A%7D%0A)
 
@@ -20,13 +22,18 @@ The project consists of the following main components:
 - **Scheduled Task**: A cron job is set up to download the data daily.
 
 ## 3. Installation
+We expect that you have some basic knowledge on how to use git and use of linux commands but we will cover everything you need.
 
 ### Pre-requisites
 
 1. **Node.js**: The project is built using Node.js and npm. You can download Node.js from [here](https://nodejs.org/).
+
 2. **PostgreSQL**: The project uses PostgreSQL as the database. You can download PostgreSQL from [here](https://www.postgresql.org/).
 
+3. **Docker**: If you are not familiar with these packages it is highly recommended that you familiarise yourself with Docker. [here](https://www.docker.com/)
+
 To set up the project, follow these steps:
+
 
 1. **Clone the repository**:
     ```sh
